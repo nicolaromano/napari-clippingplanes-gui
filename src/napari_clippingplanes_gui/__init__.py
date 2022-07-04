@@ -4,8 +4,4 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-
-
-
-
-from ._widget import ExampleQWidget, example_magic_widget
+from ._widget import CPController
