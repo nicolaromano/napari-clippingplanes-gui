@@ -6,3 +6,4 @@ except ImportError:
 
 from .dock_widget import ImgClipperWidget
 from .widgets import ClippingSliderWidget
+from .utils import CPManager
