@@ -4,4 +4,5 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-from ._widget import CPController
+from .dock_widget import ImgClipperWidget
+from .widgets import ClippingSliderWidget
