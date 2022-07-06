@@ -1,11 +1,14 @@
 # napari-clippingplanes-gui
 
-[![License](https://img.shields.io/pypi/l/napari-clippingplanes-gui.svg?color=green)](https://github.com/ch-n/napari-clippingplanes-gui/raw/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/napari-clippingplanes-gui.svg?color=green)](https://pypi.org/project/napari-clippingplanes-gui)
+[//]: <[![License](https://img.shields.io/pypi/l/napari-clippingplanes-gui.svg?color=green)](https://github.com/ch-n/napari-clippingplanes-gui/raw/main/LICENSE)>
+
+[//]: <[![PyPI](https://img.shields.io/pypi/v/napari-clippingplanes-gui.svg?color=green)](https://pypi.org/project/napari-clippingplanes-gui)>
+
+[//]: <[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clippingplanes-gui)](https://napari-hub.org/plugins/napari-clippingplanes-gui)>
+
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-clippingplanes-gui.svg?color=green)](https://python.org)
 [![tests](https://github.com/ch-n/napari-clippingplanes-gui/workflows/tests/badge.svg)](https://github.com/ch-n/napari-clippingplanes-gui/actions)
 [![codecov](https://codecov.io/gh/ch-n/napari-clippingplanes-gui/branch/main/graph/badge.svg)](https://codecov.io/gh/ch-n/napari-clippingplanes-gui)
-[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clippingplanes-gui)](https://napari-hub.org/plugins/napari-clippingplanes-gui)
 
 GUI to control the experimental napari clipping planes feature.
 
@@ -23,10 +26,9 @@ https://napari.org/plugins/stable/index.html
 
 ## Installation
 
-You can install `napari-clippingplanes-gui` via [pip]:
+You can install `napari-clippingplanes-gui` from this repository via [pip]:
 
-    pip install napari-clippingplanes-gui
-
+    ppip install git+https://github.com/ch-n/napari_clippingplanes_gui/
 
 
 
