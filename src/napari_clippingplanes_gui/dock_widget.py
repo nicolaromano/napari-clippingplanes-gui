@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QWidget, QVBoxLayout
 
-from utils import CPManager
-from widgets import ClippingSliderWidget
+from .utils import CPManager
+from .widgets import ClippingSliderWidget
 
 
 class ImgClipperWidget(QWidget):
@@ -20,9 +20,9 @@ class ImgClipperWidget(QWidget):
         super().__init__()
         self.viewer = napari_viewer
         self._init_ui()
-        self.x_clipping_slider.set_state(True)
         self.clipping_plane_manager = CPManager(
-            self.viewer, [self.x_clipping_slider, self.y_clipping_slider, self.z_clipping_slider]
+            self.viewer, dict(z=(0, 0), y=(2, 1), x=(4, 2)),
+            [self.x_clipping_slider, self.y_clipping_slider, self.z_clipping_slider]
         )
 
     def _init_ui(self):

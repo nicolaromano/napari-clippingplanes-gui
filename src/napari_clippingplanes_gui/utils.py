@@ -1,13 +1,8 @@
 import numpy as np
 
-from qtpy.QtCore import Slot
-from typing import Any, List, Tuple
-from widgets import ClippingSliderWidget
+from typing import Any, Dict, List, Tuple
 
-
-@Slot()
-def print_signal(*message):
-    print(message)
+from .widgets import ClippingSliderWidget
 
 
 def get_spatial_bounds(layer) -> List[Tuple[int, Any]]:
@@ -27,28 +22,28 @@ def get_spatial_bounds(layer) -> List[Tuple[int, Any]]:
 class CPManager:
     """Manager class for napari clipping planes and corresponding slider widgets.
     Manages the construction of clipping planes per image layer and the signal processing.
-
-    Class attributes:
-        - ref: reference dictionary to connect axe string names with indices
     """
-    ref = dict(z=(0, 0), y=(2, 1), x=(4, 2))
-
-    def __init__(self, viewer, sliders: List[ClippingSliderWidget]):
+    def __init__(self, viewer, ref: Dict, sliders: List[ClippingSliderWidget]):
         """Initialise class instance.
 
         :param viewer: napari viewer object to interact with
         :type viewer: napari.Viewer
+        :param ref: reference dictionary to connect slider string ids with indices, keys must match slider names
+        :type ref: Dict
         :param sliders: list of slider widgets to control the clipping planes
         :type sliders: napari_clippingplanes_gui.ClippingSliderWidget
         """
         super().__init__()
         self.viewer = viewer
+        self.ref = ref
         self.sliders = {}
         for slider in sliders:
             self._register_slider(slider)
         for layer in self.viewer.layers:
             if layer._type_string == 'image':
                 self._layer_spawn_clipping_planes(layer)
+
+        assert self.sliders.keys() == self.ref.keys()
 
         self.viewer.layers.events.inserted.connect(self.layer_inserted)
 
@@ -64,16 +59,19 @@ class CPManager:
         slider.state_emitter.connect(self.slider_state_changed)
         slider.value_emitter.connect(self.slider_value_changed)
 
-    def _unregister_slider(self, slider_name: str):
+    def _unregister_slider(self, slider_name: str) -> ClippingSliderWidget:
         """Unregister a slider widget from a CPManager instance.
         This method removes a slider widget from the internal dict of widgets and disconnects the slider widget signals.
 
         :param slider_name: key for the internal slider dict, returns a registered slider
         :type slider_name: str
+        :return: the unregistered slider for removal at other places
+        :rtype: ClippingSliderWidget
         """
         slider = self.sliders.pop(slider_name)
         slider.state_emitter.disconnect(self.slider_state_changed)
         slider.value_emitter.disconnect(self.slider_value_changed)
+        return slider
 
     def _layer_spawn_clipping_planes(self, layer):
         """Generate clipping planes for a napari viewer layer.
@@ -83,32 +81,33 @@ class CPManager:
         :param layer: napari viewer layer for which clipping planes shall be generated
         :type layer: napari.layers.Layer
         """
-        if not layer.experimental_clipping_planes:
+        if not layer.experimental_clipping_planes and layer.ndim > 2:
             axis_bounds = get_spatial_bounds(layer)
-            layer.metadata['cp_spacing'] = dict(
-                x=np.linspace(*axis_bounds[2], num=101),
-                y=np.linspace(*axis_bounds[1], num=101),
-                z=np.linspace(*axis_bounds[0], num=101)
-            )
+            layer.metadata['cp_spacing'] = {
+                key: np.linspace(*bounds, num=101)
+                for key, bounds in zip(['z', 'y', 'x'], axis_bounds)
+            }
             cpl = []
             for axn, (axis, bounds) in zip(('z', 'y', 'x'), enumerate(axis_bounds)):
                 for ind, direction in enumerate((1, -1)):
                     position = np.zeros(3, dtype=int)
                     position[axis] = bounds[ind]
+                    position = layer.world_to_data(position)
+                    if len(position) > 3:
+                        position = position[-3:]
                     normal = np.zeros(3, dtype=int)
                     normal[axis] = direction
                     enabled = self.sliders[axn].state
                     cp_dict = dict(
-                        position=layer.world_to_data(position),
+                        position=position,
                         normal=normal,
                         enabled=enabled
                     )
                     cpl.append(cp_dict)
             layer.experimental_clipping_planes = cpl
 
-    @Slot(Tuple[str, bool])
     def slider_state_changed(self, name: str, state: bool):
-        """Slot for slider state_changed signals.
+        """Callback for slider state_changed signals.
         A sent signal will result in enabling/disabling of the corresponding clipping planes of all viewer image layers.
 
         :param name: axis name (x, y, z)
@@ -121,9 +120,8 @@ class CPManager:
                 layer.experimental_clipping_planes[self.ref[name][0]].enabled = state
                 layer.experimental_clipping_planes[self.ref[name][0] + 1].enabled = state
 
-    @Slot(Tuple[str, Tuple[int, int]])
     def slider_value_changed(self, name: str, crange: Tuple[int, int]):
-        """Slot for slider value_changed signals.
+        """Callback for slider value_changed signals.
         A sent signal will result in repositioning of the corresponding clipping planes of all viewer image layers.
 
         :param name: axis name (x, y, z)
@@ -135,14 +133,19 @@ class CPManager:
             if layer._type_string == 'image' and layer.experimental_clipping_planes:
                 lower = np.zeros(3)
                 lower[self.ref[name][1]] = layer.metadata['cp_spacing'][name][crange[0]]
+                lower = layer.world_to_data(lower)
+                if len(lower) > 3:
+                    lower = lower[-3:]
                 upper = np.zeros(3)
                 upper[self.ref[name][1]] = layer.metadata['cp_spacing'][name][crange[1]]
-                layer.experimental_clipping_planes[self.ref[name][0]].position = layer.world_to_data(lower)
-                layer.experimental_clipping_planes[self.ref[name][0] + 1].position = layer.world_to_data(upper)
+                upper = layer.world_to_data(upper)
+                if len(upper) > 3:
+                    upper = upper[-3:]
+                layer.experimental_clipping_planes[self.ref[name][0]].position = lower
+                layer.experimental_clipping_planes[self.ref[name][0] + 1].position = upper
 
-    @Slot(Any)
     def layer_inserted(self, event):
-        """Slot for napari.Viewer.layers.events.inserted signals.
+        """Callback for napari.Viewer.layers.events.inserted signals.
         A sent signal will start the _layer_spawn_clipping_planes method for a newly added layer. The new layer is
         extracted from the event source.
 

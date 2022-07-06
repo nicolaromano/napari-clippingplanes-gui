@@ -6,9 +6,6 @@ see: https://napari.org/plugins/stable/guides.html#widgets
 
 Replace code below according to your needs.
 """
-
-from __future__ import annotations
-
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QLabel
 from qtpy.QtCore import Qt, Signal
 from superqt import QRangeSlider
@@ -27,23 +24,27 @@ class ClippingSliderWidget(QWidget):
     state_emitter = Signal([str, bool])
     value_emitter = Signal([str, tuple])
 
-    def __init__(self, name: str, srange: Tuple[int, int] = (0, 100), value: Tuple[int, int] = (0, 100)):
+    def __init__(self, name: str, state: bool = False, srange: Tuple[int, int] = (0, 100), value: Tuple[int, int] = (0, 100)):
         """Initialise instance.
 
         :param name: slider name, will be displayed in the widget and can be used for identification
         :type name: str
-        :param srange: slider range, (min, max)
+        :param state: checkbox state, default: False
+        :type state: bool
+        :param srange: slider range, (min, max), default: (0, 100)
         :type srange: Tuple[int, int]
-        :param value: slider values, position of the lower and upper bounds
+        :param value: slider values, position of the lower and upper bounds, default: (0, 100)
         :type value: Tuple[int, int]
         """
         super().__init__()
         self.name = name
+        self.state = state
+        self.range = srange
+        self.value = value
         self._init_ui()
-        self.set_range(*srange)
-        self.set_value(value)
-        self.state = self.get_state()
-        self.value = self.get_value()
+        self.set_state(self.state)
+        self.set_range(*self.range)
+        self.set_value(self.value)
 
     def _init_ui(self):
         """Initialise UI elements.
@@ -60,15 +61,6 @@ class ClippingSliderWidget(QWidget):
         layout.addWidget(self.rangeslider)
         self.setLayout(layout)
 
-    def get_state(self) -> bool:
-        """Return the current state.
-        Extracts the state from the underlying QCheckbox.
-
-        :return: State of the widget (True / False)
-        :rtype: bool
-        """
-        return self.active_check.isChecked()
-
     def set_state(self, state: bool):
         """Set to new state.
         Sets the state attribute of the instance and underlying QCheckbox to state and calls the state_changed() method.
@@ -77,17 +69,15 @@ class ClippingSliderWidget(QWidget):
         :type state: bool
         """
         self.active_check.setChecked(state)
-        self.state = state
-        self.state_changed()
 
-    def get_value(self) -> Tuple[Any, ...]:
-        """Return the current value.
-        Extracts the current value from the underlying QRangeSlider.
+    def get_state(self) -> bool:
+        """Return the current state.
+        Extracts the state from the underlying QCheckbox.
 
-        :return: current range of the widget (lower, upper)
-        :rtype: Tuple[Any, ...]
+        :return: State of the widget (True / False)
+        :rtype: bool
         """
-        return self.rangeslider.value()
+        return self.active_check.isChecked()
 
     def set_value(self, value: Tuple[int, int]):
         """Set to new state.
@@ -98,8 +88,35 @@ class ClippingSliderWidget(QWidget):
         :type value: Tuple[int, int]
         """
         self.rangeslider.setValue(value)
-        self.value = value
-        self.value_changed()
+
+    def get_value(self) -> Tuple[Any, ...]:
+        """Return the current value.
+        Extracts the current value from the underlying QRangeSlider.
+
+        :return: current value of the widget (lower, upper)
+        :rtype: Tuple[Any, ...]
+        """
+        return self.rangeslider.value()
+
+    def set_range(self, lower: float, upper: float):
+        """Set range of the underlying slider.
+
+        :param lower: minimal possible value of the slider
+        :type lower: float
+        :param upper: maximal possible value of the slider
+        :type upper: float
+        """
+        self.rangeslider.setRange(lower, upper)
+        self.range = self.get_range()
+
+    def get_range(self) -> Tuple[float, float]:
+        """Return the current range.
+        Extracts the current range from the underlying QRangeSlider.
+
+        :return: current range of the widget (min, max)
+        :rtype: Tuple[float, float]
+        """
+        return self.rangeslider.minimum(), self.rangeslider.maximum()
 
     def state_changed(self) -> Tuple[str, bool]:
         """Emit state_changed signal.
@@ -107,7 +124,8 @@ class ClippingSliderWidget(QWidget):
         :return: name and new state of the instance
         :rtype: Tuple[str, bool]
         """
-        return self.state_emitter.emit(self.name, self.get_state())
+        self.state = self.get_state()
+        return self.state_emitter.emit(self.name, self.state)
 
     def value_changed(self):
         """Emit value_changed signal.
@@ -115,14 +133,5 @@ class ClippingSliderWidget(QWidget):
         :return: name and new value of the instance
         :rtype: Tuple[str, Tuple[int, int]]
         """
-        return self.value_emitter.emit(self.name, self.get_value())
-
-    def set_range(self, lower: int, upper: int):
-        """Set range of the underlying slider.
-
-        :param lower: minimal possible value of the slider
-        :type lower: int
-        :param upper: maximal possible value of the slider
-        :type upper: int
-        """
-        self.rangeslider.setRange(lower, upper)
+        self.value = self.get_value()
+        return self.value_emitter.emit(self.name, self.value)
