@@ -28,7 +28,7 @@ https://napari.org/plugins/stable/index.html
 
 You can install `napari-clippingplanes-gui` from this repository via [pip]:
 
-    ppip install git+https://github.com/ch-n/napari_clippingplanes_gui/
+    pip install git+https://github.com/ch-n/napari_clippingplanes_gui/
 
 
 
