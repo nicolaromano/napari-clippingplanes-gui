@@ -10,8 +10,11 @@
 [![tests](https://github.com/ch-n/napari-clippingplanes-gui/workflows/tests/badge.svg)](https://github.com/ch-n/napari-clippingplanes-gui/actions)
 [![codecov](https://codecov.io/gh/ch-n/napari-clippingplanes-gui/branch/main/graph/badge.svg)](https://codecov.io/gh/ch-n/napari-clippingplanes-gui)
 
-GUI to control the experimental napari clipping planes feature.
+The napari-clippingplanes-gui plugin for the napari image viewer adds a widget to the viewer to control clipping planes for all spatial axes.
 
+<p align="center">
+  <img src="https://github.com/ch-n/napari-clippingplanes-gui/raw/main/ClipperDemo.gif" alt="Demo gif" />
+</p>
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
