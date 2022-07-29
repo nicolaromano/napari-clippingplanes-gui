@@ -92,7 +92,7 @@ class CPManager:
                 for ind, direction in enumerate((1, -1)):
                     position = np.zeros(3, dtype=int)
                     position[axis] = bounds[ind]
-                    position = layer.world_to_data(position)
+                    position = layer.data_to_world(position)
                     if len(position) > 3:
                         position = position[-3:]
                     normal = np.zeros(3, dtype=int)
@@ -133,12 +133,12 @@ class CPManager:
             if layer._type_string == 'image' and layer.experimental_clipping_planes:
                 lower = np.zeros(3)
                 lower[self.ref[name][1]] = layer.metadata['cp_spacing'][name][crange[0]]
-                lower = layer.world_to_data(lower)
+                lower = layer.data_to_world(lower)
                 if len(lower) > 3:
                     lower = lower[-3:]
                 upper = np.zeros(3)
                 upper[self.ref[name][1]] = layer.metadata['cp_spacing'][name][crange[1]]
-                upper = layer.world_to_data(upper)
+                upper = layer.data_to_world(upper)
                 if len(upper) > 3:
                     upper = upper[-3:]
                 layer.experimental_clipping_planes[self.ref[name][0]].position = lower
